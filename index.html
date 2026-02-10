@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Offline Mini WebUI</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <div class="left">
+      <div class="brand">Offline Mini WebUI</div>
+      <div class="status" id="status">未登入</div>
+    </div>
+    <div class="left" style="gap:8px">
+      <button class="button secondary" id="btnSettings">設定</button>
+      <button class="button secondary hidden" id="btnLogout">登出</button>
+    </div>
+  </header>
+
+  <main>
+    <aside id="sidebar">
+      <div class="section" id="authPanel">
+        <div class="small">登入</div>
+        <div style="height:8px"></div>
+        <input class="input" id="email" placeholder="email" />
+        <div style="height:8px"></div>
+        <input class="input" id="password" placeholder="password" type="password" />
+        <div style="height:10px"></div>
+        <div class="row">
+          <button class="button" id="btnLogin">登入</button>
+          <button class="button secondary" id="btnRegister">註冊</button>
+        </div>
+        <div style="height:10px"></div>
+        <div class="small" id="authMsg"></div>
+      </div>
+
+      <div class="section hidden" id="chatPanel">
+        <div class="row">
+          <button class="button" id="btnNewChat">新對話</button>
+          <button class="button secondary" id="btnRefresh">刷新</button>
+        </div>
+        <div style="height:10px"></div>
+        <div class="small">聊天</div>
+      </div>
+
+      <div id="chats" class="hidden"></div>
+    </aside>
+
+    <section id="content">
+      <div id="messages"></div>
+      <div id="composer" class="hidden">
+        <div class="row">
+          <select id="model"></select>
+          <button class="button secondary" id="btnUpload">上傳文件（RAG）</button>
+        </div>
+        <div style="height:8px"></div>
+        <textarea id="prompt" placeholder="輸入訊息... (Shift+Enter 換行 / Enter 送出)"></textarea>
+        <div style="height:8px"></div>
+        <div class="row">
+          <button class="button" id="btnSend">送出</button>
+          <button class="button secondary" id="btnStop">停止</button>
+        </div>
+        <div style="height:8px"></div>
+        <div class="small" id="hint"></div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="dlgSettings">
+    <form method="dialog" style="min-width: min(640px, 90vw)">
+      <h3>設定</h3>
+      <div class="small">這些設定存在瀏覽器 localStorage，不會上傳。</div>
+      <div style="height:10px"></div>
+      <label class="small">OpenAI Base URL（server 端也有環境變數；此為 UI 顯示用途）</label>
+      <input class="input" id="uiBaseUrl" placeholder="http://127.0.0.1:8000/v1" />
+      <div style="height:10px"></div>
+      <label class="small">RAG：Top K</label>
+      <input class="input" id="ragTopK" type="number" min="1" max="20" value="5" />
+      <div style="height:14px"></div>
+      <div class="row">
+        <button class="button secondary" value="cancel">取消</button>
+        <button class="button" id="btnSaveSettings" value="default">保存</button>
+      </div>
+      <div style="height:8px"></div>
+      <div class="small">版本：<span class="code" id="ver"></span></div>
+    </form>
+  </dialog>
+
+  <input id="fileInput" type="file" class="hidden" />
+
+  <script src="/app.js"></script>
+</body>
+</html>
