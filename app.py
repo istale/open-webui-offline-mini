@@ -40,7 +40,9 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 
 APP_SECRET = os.environ.get("APP_SECRET", "dev-secret")
-OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "http://127.0.0.1:8000/v1").rstrip("/")
+OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "http://127.0.0.1:8000/v1").rstrip(
+    "/"
+)
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "EMPTY")
 DEFAULT_CHAT_MODEL = os.environ.get("DEFAULT_CHAT_MODEL", "")
 DEFAULT_EMBED_MODEL = os.environ.get("DEFAULT_EMBED_MODEL", "")
@@ -54,6 +56,7 @@ app = FastAPI(title="offline-mini-webui")
 
 
 # --------------------------- DB ---------------------------
+
 
 def db() -> sqlite3.Connection:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -80,6 +83,7 @@ def init_db() -> None:
           id TEXT PRIMARY KEY,
           user_id INTEGER NOT NULL,
           title TEXT NOT NULL,
+          model TEXT,
           created_at INTEGER NOT NULL,
           updated_at INTEGER NOT NULL,
           FOREIGN KEY(user_id) REFERENCES users(id)
@@ -117,6 +121,7 @@ init_db()
 
 # --------------------------- Auth token ---------------------------
 
+
 @dataclass
 class Token:
     user_id: int
@@ -134,7 +139,11 @@ def _b64url_decode(s: str) -> bytes:
 
 
 def sign_token(user_id: int, email: str, ttl_s: int = 7 * 24 * 3600) -> str:
-    payload = {"uid": int(user_id), "email": str(email), "exp": int(time.time()) + int(ttl_s)}
+    payload = {
+        "uid": int(user_id),
+        "email": str(email),
+        "exp": int(time.time()) + int(ttl_s),
+    }
     raw = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")
     sig = hmac.new(APP_SECRET.encode("utf-8"), raw, hashlib.sha256).digest()
     return _b64url(raw) + "." + _b64url(sig)
@@ -151,7 +160,11 @@ def verify_token(token: str) -> Token:
         payload = json.loads(raw.decode("utf-8"))
         if int(payload.get("exp", 0)) < int(time.time()):
             raise ValueError("expired")
-        return Token(user_id=int(payload["uid"]), email=str(payload["email"]), exp=int(payload["exp"]))
+        return Token(
+            user_id=int(payload["uid"]),
+            email=str(payload["email"]),
+            exp=int(payload["exp"]),
+        )
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Invalid token: {e}")
 
@@ -165,6 +178,7 @@ def require_user(request: Request) -> Token:
 
 # --------------------------- Models ---------------------------
 
+
 class RegisterIn(BaseModel):
     email: str
     password: str
@@ -177,6 +191,7 @@ class LoginIn(BaseModel):
 
 class ChatCreateIn(BaseModel):
     title: str = ""
+    model: str = ""
 
 
 class StreamIn(BaseModel):
@@ -185,7 +200,14 @@ class StreamIn(BaseModel):
     rag_top_k: int = 5
 
 
+class RAGSearchIn(BaseModel):
+    query: str
+    chat_id: str
+    top_k: int = 5
+
+
 # --------------------------- OpenAI-compatible client ---------------------------
+
 
 def _openai_headers() -> Dict[str, str]:
     return {"Authorization": f"Bearer {OPENAI_API_KEY}"}
@@ -213,6 +235,7 @@ def openai_embeddings(model: str, texts: List[str]) -> List[List[float]]:
 
 # --------------------------- Utils: RAG ---------------------------
 
+
 def chunk_text(text: str, max_chars: int = 1200, overlap: int = 150) -> List[str]:
     text = text.replace("\r\n", "\n")
     if not text.strip():
@@ -239,17 +262,18 @@ def cosine(a: List[float], b: List[float]) -> float:
         nb += y * y
     if na <= 0 or nb <= 0:
         return 0.0
-    return dot / ((na ** 0.5) * (nb ** 0.5))
+    return dot / ((na**0.5) * (nb**0.5))
 
 
-def rag_retrieve(user_id: int, chat_id: str, query: str, top_k: int, embed_model: str) -> List[Dict[str, Any]]:
+def rag_retrieve(user_id: int, query: str, top_k: int, embed_model: str) -> List[Dict[str, Any]]:
+    """Retrieve RAG chunks for a user (shared across chats)."""
     if not embed_model:
         return []
     qvec = openai_embeddings(embed_model, [query])[0]
     conn = db()
     rows = conn.execute(
-        "SELECT id, source_name, chunk_index, content, embedding_json FROM rag_chunks WHERE user_id=? AND chat_id=?",
-        (user_id, chat_id),
+        "SELECT id, source_name, chunk_index, content, embedding_json FROM rag_chunks WHERE user_id=?",
+        (user_id,),
     ).fetchall()
     conn.close()
 
@@ -263,7 +287,14 @@ def rag_retrieve(user_id: int, chat_id: str, query: str, top_k: int, embed_model
     scored.sort(key=lambda x: x[0], reverse=True)
     out = []
     for s, rr in scored[: max(1, int(top_k))]:
-        out.append({"score": float(s), "source": rr["source_name"], "chunk_index": rr["chunk_index"], "content": rr["content"]})
+        out.append(
+            {
+                "score": float(s),
+                "source": rr["source_name"],
+                "chunk_index": rr["chunk_index"],
+                "content": rr["content"],
+            }
+        )
     return out
 
 
@@ -289,6 +320,23 @@ def style_css() -> Any:
 
 # --------------------------- Auth endpoints ---------------------------
 
+
+def _hash_password(password: str) -> str:
+    # bcrypt has 72-byte limit; truncate if necessary
+    password_bytes = password.encode("utf-8")
+    if len(password_bytes) > 72:
+        password_bytes = password_bytes[:72]
+    return pwd_context.hash(password_bytes)
+
+
+def _verify_password(password: str, hash: str) -> bool:
+    # bcrypt has 72-byte limit; truncate if necessary
+    password_bytes = password.encode("utf-8")
+    if len(password_bytes) > 72:
+        password_bytes = password_bytes[:72]
+    return pwd_context.verify(password_bytes, hash)
+
+
 @app.post("/api/register")
 def register(inp: RegisterIn) -> Any:
     email = inp.email.strip().lower()
@@ -297,7 +345,7 @@ def register(inp: RegisterIn) -> Any:
     if len(inp.password) < 6:
         raise HTTPException(400, "Password too short")
 
-    ph = pwd_context.hash(inp.password)
+    ph = _hash_password(inp.password)
     conn = db()
     try:
         conn.execute(
@@ -316,11 +364,13 @@ def register(inp: RegisterIn) -> Any:
 def login(inp: LoginIn) -> Any:
     email = inp.email.strip().lower()
     conn = db()
-    row = conn.execute("SELECT id,email,password_hash FROM users WHERE email=?", (email,)).fetchone()
+    row = conn.execute(
+        "SELECT id,email,password_hash FROM users WHERE email=?", (email,)
+    ).fetchone()
     conn.close()
     if not row:
         raise HTTPException(401, "Bad credentials")
-    if not pwd_context.verify(inp.password, row["password_hash"]):
+    if not _verify_password(inp.password, row["password_hash"]):
         raise HTTPException(401, "Bad credentials")
     token = sign_token(int(row["id"]), str(row["email"]))
     return {"token": token}
@@ -331,7 +381,14 @@ def me(t: Token = Depends(require_user)) -> Any:
     return {"id": t.user_id, "email": t.email, "exp": t.exp}
 
 
+@app.post("/api/auth/logout")
+def logout(t: Token = Depends(require_user)) -> Any:
+    # JWT is stateless; client clears token. This endpoint is for completeness.
+    return {"ok": True}
+
+
 # --------------------------- Models endpoint ---------------------------
+
 
 @app.get("/api/models")
 def models(t: Token = Depends(require_user)) -> Any:
@@ -346,9 +403,12 @@ def models(t: Token = Depends(require_user)) -> Any:
 
 # --------------------------- Chat endpoints ---------------------------
 
+
 def _chat_ensure_owned(chat_id: str, user_id: int) -> sqlite3.Row:
     conn = db()
-    row = conn.execute("SELECT * FROM chats WHERE id=? AND user_id=?", (chat_id, user_id)).fetchone()
+    row = conn.execute(
+        "SELECT * FROM chats WHERE id=? AND user_id=?", (chat_id, user_id)
+    ).fetchone()
     conn.close()
     if not row:
         raise HTTPException(404, "Chat not found")
@@ -359,7 +419,7 @@ def _chat_ensure_owned(chat_id: str, user_id: int) -> sqlite3.Row:
 def list_chats(t: Token = Depends(require_user)) -> Any:
     conn = db()
     rows = conn.execute(
-        "SELECT id,title,created_at,updated_at FROM chats WHERE user_id=? ORDER BY updated_at DESC",
+        "SELECT id,title,model,created_at,updated_at FROM chats WHERE user_id=? ORDER BY updated_at DESC",
         (t.user_id,),
     ).fetchall()
     conn.close()
@@ -371,14 +431,23 @@ def create_chat(inp: ChatCreateIn, t: Token = Depends(require_user)) -> Any:
     chat_id = "C" + secrets.token_hex(8)
     now = int(time.time())
     title = (inp.title or "").strip()
+    model = (inp.model or "").strip()
     conn = db()
     conn.execute(
-        "INSERT INTO chats(id,user_id,title,created_at,updated_at) VALUES (?,?,?,?,?)",
-        (chat_id, t.user_id, title, now, now),
+        "INSERT INTO chats(id,user_id,title,model,created_at,updated_at) VALUES (?,?,?,?,?,?)",
+        (chat_id, t.user_id, title, model, now, now),
     )
     conn.commit()
     conn.close()
-    return {"chat": {"id": chat_id, "title": title, "created_at": now, "updated_at": now}}
+    return {
+        "chat": {
+            "id": chat_id,
+            "title": title,
+            "model": model,
+            "created_at": now,
+            "updated_at": now,
+        }
+    }
 
 
 @app.get("/api/chats/{chat_id}/messages")
@@ -399,7 +468,9 @@ def _store_message(chat_id: str, role: str, content: str) -> None:
         "INSERT INTO messages(chat_id,role,content,created_at) VALUES (?,?,?,?)",
         (chat_id, role, content, int(time.time())),
     )
-    conn.execute("UPDATE chats SET updated_at=? WHERE id=?", (int(time.time()), chat_id))
+    conn.execute(
+        "UPDATE chats SET updated_at=? WHERE id=?", (int(time.time()), chat_id)
+    )
     conn.commit()
     conn.close()
 
@@ -443,6 +514,16 @@ async def upload(
     return {"ok": True, "chunks": len(chunks)}
 
 
+@app.post("/api/rag/search")
+def rag_search(inp: RAGSearchIn, t: Token = Depends(require_user)) -> Any:
+    """Search RAG chunks for a given chat without sending a chat message."""
+    _chat_ensure_owned(inp.chat_id, t.user_id)
+    if not DEFAULT_EMBED_MODEL:
+        raise HTTPException(400, "DEFAULT_EMBED_MODEL not set")
+    hits = rag_retrieve(t.user_id, inp.query, inp.top_k, DEFAULT_EMBED_MODEL)
+    return {"results": hits}
+
+
 @app.post("/api/chats/{chat_id}/stream")
 def stream_chat(chat_id: str, inp: StreamIn, t: Token = Depends(require_user)) -> Any:
     _chat_ensure_owned(chat_id, t.user_id)
@@ -461,11 +542,13 @@ def stream_chat(chat_id: str, inp: StreamIn, t: Token = Depends(require_user)) -
     # RAG context (optional)
     rag_ctx = ""
     if inp.rag_top_k and DEFAULT_EMBED_MODEL:
-        hits = rag_retrieve(t.user_id, chat_id, prompt, inp.rag_top_k, DEFAULT_EMBED_MODEL)
+        hits = rag_retrieve(t.user_id, prompt, inp.rag_top_k, DEFAULT_EMBED_MODEL)
         if hits:
             parts = ["[RAG Context] 以下為檢索到的片段："]
             for h in hits:
-                parts.append(f"- ({h['score']:.3f}) {h['source']}#{h['chunk_index']}: {h['content']}")
+                parts.append(
+                    f"- ({h['score']:.3f}) {h['source']}#{h['chunk_index']}: {h['content']}"
+                )
             rag_ctx = "\n".join(parts)
 
     # build messages from history (simple)
@@ -512,7 +595,9 @@ def stream_chat(chat_id: str, inp: StreamIn, t: Token = Depends(require_user)) -
                         break
                     try:
                         ev = json.loads(data)
-                        delta = ev.get("choices", [{}])[0].get("delta", {}).get("content")
+                        delta = (
+                            ev.get("choices", [{}])[0].get("delta", {}).get("content")
+                        )
                         if delta:
                             acc += delta
                             out = json.dumps({"delta": delta}, ensure_ascii=False)

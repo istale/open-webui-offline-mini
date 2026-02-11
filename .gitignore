@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtualenv
+.venv/
+
+# Local data
+/data/
+
+# Tooling caches
+.ruff_cache/
+
+# OS
+.DS_Store
