@@ -37,10 +37,12 @@ def call_llm(prompt: str, env: dict) -> str:
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.3,
         "max_tokens": 500,
+        "stream": False,
     }
 
+    # NOTE: local models can be slow (first-token latency). Use a longer timeout.
     try:
-        response = httpx.post(url, headers=headers, json=payload, timeout=60.0)
+        response = httpx.post(url, headers=headers, json=payload, timeout=180.0)
         response.raise_for_status()
         data = response.json()
         return data["choices"][0]["message"]["content"]
@@ -55,7 +57,17 @@ Question: {question_text}
 
 Provide a brief answer:"""
 
-    return call_llm(prompt, env)
+    return call_llm_with_retry(prompt, env)
+
+
+def call_llm_with_retry(prompt: str, env: dict, attempts: int = 3) -> str:
+    """Retry wrapper for slow local backends."""
+    last = ""
+    for i in range(attempts):
+        last = call_llm(prompt, env)
+        if not (isinstance(last, str) and last.startswith("ERROR:")):
+            return last
+    return last
 
 
 def grade_answer(
@@ -77,7 +89,7 @@ Respond in this JSON format (no markdown code blocks, just raw JSON):
   "study_actions": ["action to study concept 1", "action to study concept 2"]
 }}"""
 
-    response = call_llm(prompt, env)
+    response = call_llm_with_retry(prompt, env)
 
     try:
         start = response.find("{")
@@ -103,9 +115,14 @@ Respond in this JSON format (no markdown code blocks, just raw JSON):
 
 
 def process_exam(exam_path: Path, run_id: str, env: dict) -> dict:
+    print(f"[kls.exam] run_id={run_id} exam_set={exam_path.name}")
     exam_set_id = exam_path.name
     questions_dir = exam_path / "questions"
     answers_dir = exam_path / "answers"
+
+    # Checkpoint file for resumable runs
+    ensure_dir(TRACES_DIR / "exam_runs")
+    checkpoint_path = TRACES_DIR / "exam_runs" / f"{run_id}.jsonl"
 
     if not questions_dir.exists():
         raise ValueError(f"No questions directory found: {questions_dir}")
@@ -118,9 +135,30 @@ def process_exam(exam_path: Path, run_id: str, env: dict) -> dict:
     answer_key = read_json(answer_key_path) or {}
 
     feedback_records = []
+
+    # Resume support: skip questions already processed
+    done = set()
+    if checkpoint_path.exists():
+        try:
+            for line in checkpoint_path.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                rec = json.loads(line)
+                qid = rec.get("question_id")
+                if qid:
+                    done.add(qid)
+        except Exception:
+            pass
+
+    print(f"[kls.exam] questions={len(question_files)} done={len(done)}")
     results_summary = []
 
-    for q_path in question_files:
+    for idx, q_path in enumerate(question_files, start=1):
+        qid = q_path.stem  # e.g. q_0001
+        if qid in done:
+            print(f"[kls.exam] Q{idx}/{len(question_files)} {qid} (skip; already done)", flush=True)
+            continue
+        print(f"[kls.exam] Q{idx}/{len(question_files)} {qid} file={q_path.name}", flush=True)
         q_id = q_path.stem
         question_text = read_optional_txt(q_path)
 
@@ -136,31 +174,54 @@ def process_exam(exam_path: Path, run_id: str, env: dict) -> dict:
 
         student_answer = generate_answer(question_text, env)
 
+        # Fast grading to reduce LLM calls: determine correctness by matching answer key.
+        result = "unknown"
         if correct_answer:
-            feedback = grade_answer(question_text, student_answer, correct_answer, env)
-        else:
+            sa_u = str(student_answer).strip().upper()
+            ca_u = str(correct_answer).strip().upper()
+            if ca_u and ca_u in sa_u:
+                result = "correct"
+            elif ca_u:
+                result = "incorrect"
+
+        # Only use LLM grading feedback when not correct (reduce total calls)
+        if not correct_answer:
             feedback = {
                 "result": "unknown",
                 "rationale": "No answer key available for grading",
                 "gaps": [],
                 "study_actions": [],
             }
+        elif result == "correct":
+            feedback = {
+                "result": "correct",
+                "rationale": "",
+                "gaps": [],
+                "study_actions": [],
+            }
+        else:
+            feedback = grade_answer(question_text, student_answer, correct_answer, env)
+            if result in ("incorrect", "correct"):
+                feedback["result"] = result
 
         feedback_record = {
             "question_id": q_id,
+            "question_path": str(q_path),
+            "student_answer": student_answer,
+            "correct_answer": correct_answer,
             "result": feedback["result"],
             "rationale": feedback["rationale"],
             "gaps": feedback["gaps"],
             "study_actions": feedback["study_actions"],
         }
+
+        # Checkpoint per-question for resumability
+        with checkpoint_path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(feedback_record, ensure_ascii=False) + "\n")
+
         feedback_records.append(feedback_record)
 
-        results_summary.append(
-            {
-                "question_id": q_id,
-                "result": feedback["result"],
-            }
-        )
+        results_summary.append({"question_id": q_id, "result": feedback["result"]})
 
     feedback_output = {
         "run_id": run_id,
