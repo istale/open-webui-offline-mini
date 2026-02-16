@@ -160,10 +160,11 @@ def process_exam(exam_path: Path, run_id: str, env: dict) -> dict:
             continue
         print(f"[kls.exam] Q{idx}/{len(question_files)} {qid} file={q_path.name}", flush=True)
         q_id = q_path.stem
-        question_text = read_optional_txt(q_path)
+        # Prefer sidecar .txt for question text; do NOT try to read the PNG bytes as text.
+        question_text = read_optional_txt(q_path.with_suffix(".txt"))
 
         if not question_text:
-            question_text = f"[Image: {q_id}]"
+            question_text = f"[Image-only question: {q_id}]"
 
         answer_entry = answer_key.get(q_id, {})
         correct_answer = (
