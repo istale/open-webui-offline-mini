@@ -114,7 +114,7 @@ Respond in this JSON format (no markdown code blocks, just raw JSON):
         }
 
 
-def process_exam(exam_path: Path, run_id: str, env: dict) -> dict:
+def process_exam(exam_path: Path, run_id: str, env: dict, max_new_questions: int | None = None) -> dict:
     print(f"[kls.exam] run_id={run_id} exam_set={exam_path.name}")
     exam_set_id = exam_path.name
     questions_dir = exam_path / "questions"
@@ -152,6 +152,8 @@ def process_exam(exam_path: Path, run_id: str, env: dict) -> dict:
 
     print(f"[kls.exam] questions={len(question_files)} done={len(done)}")
     results_summary = []
+
+    processed_new = 0
 
     for idx, q_path in enumerate(question_files, start=1):
         qid = q_path.stem  # e.g. q_0001
@@ -224,6 +226,11 @@ def process_exam(exam_path: Path, run_id: str, env: dict) -> dict:
 
         results_summary.append({"question_id": q_id, "result": feedback["result"]})
 
+        processed_new += 1
+        if max_new_questions is not None and processed_new >= max_new_questions:
+            print(f"[kls.exam] Reached max_new_questions={max_new_questions}; stopping early", flush=True)
+            break
+
     feedback_output = {
         "run_id": run_id,
         "exam_set_id": exam_set_id,
@@ -259,6 +266,12 @@ def main():
         help="Exam set directory name under domain_knowledge_exams/",
     )
     parser.add_argument("--run-id", default=None, help="Optional run ID")
+    parser.add_argument(
+        "--max-new",
+        type=int,
+        default=None,
+        help="Process at most N not-yet-done questions this run (for batching/resume).",
+    )
     args = parser.parse_args()
 
     run_id = args.run_id or str(uuid.uuid4())[:8]
@@ -281,7 +294,7 @@ def main():
     )
 
     try:
-        result = process_exam(exam_path, run_id, env)
+        result = process_exam(exam_path, run_id, env, max_new_questions=args.max_new)
         trace_records.append(
             {
                 "event": "exam_complete",

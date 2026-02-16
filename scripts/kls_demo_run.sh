@@ -54,7 +54,16 @@ else
   fi
   # Local backends can be very slow (first-token latency). Use a longer timeout.
   # Exam is resumable via traces/exam_runs/demo_exam.jsonl.
-  timeout 1800 "$PYTHON" -m kls.exam --exam demo_ml_exam --run-id demo_exam || echo "  (Exam loop failed or timed out)"
+  # Run in small batches (2 questions per run) to avoid watchdog SIGKILL.
+  # The exam run is resumable via traces/exam_runs/demo_exam.jsonl.
+  for i in 1 2 3 4 5; do
+    echo "  Exam batch $i/5 (2 questions)..."
+    timeout 600 "$PYTHON" -m kls.exam --exam demo_ml_exam --run-id demo_exam --max-new 2 || echo "  (Exam batch failed or timed out)"
+    # If feedback exists, stop early.
+    if [ -f "exam_feedback/demo_ml_exam/demo_exam.json" ]; then
+      break
+    fi
+  done
 fi
 echo ""
 
