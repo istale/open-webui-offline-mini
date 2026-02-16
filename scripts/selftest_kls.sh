@@ -4,6 +4,12 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR/.."
 
+PYTHON="python3"
+if [ -x ".venv/bin/python" ]; then
+  PYTHON=".venv/bin/python"
+fi
+
+
 ERRORS=0
 
 echo "=========================================="
@@ -120,7 +126,7 @@ if [ -d "exam_feedback" ]; then
             fi
 
             # Verify feedback has required fields
-            if python3 -c "
+            if "$PYTHON" -c "
 import json
 import sys
 with open('$feedback_file') as f:
@@ -146,13 +152,13 @@ fi
 echo ""
 
 echo "Test 7: Checking Python syntax..."
-python3 -m py_compile kls/__init__.py kls/utils.py kls/ingest.py kls/exam.py kls/update_kb.py
-python3 -m py_compile scripts/generate_demo_kls_data.py
+"$PYTHON" -m py_compile kls/__init__.py kls/utils.py kls/ingest.py kls/exam.py kls/update_kb.py
+"$PYTHON" -m py_compile scripts/generate_demo_kls_data.py
 echo "[PASS] All Python files have valid syntax"
 echo ""
 
 echo "Test 8: Checking imports..."
-python3 -c "import kls; import kls.utils" || ERRORS=$((ERRORS + 1))
+"$PYTHON" -c "import kls; import kls.utils" || ERRORS=$((ERRORS + 1))
 echo "[PASS] KLS package imports successfully"
 echo ""
 
