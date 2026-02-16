@@ -52,7 +52,9 @@ else
   if command -v curl >/dev/null 2>&1; then
     curl -sS -m 2 "${OPENAI_BASE_URL%/}/models" >/dev/null 2>&1 || echo "  WARN: OPENAI_BASE_URL not reachable; exam may fail"
   fi
-  timeout 180 "$PYTHON" -m kls.exam --exam demo_ml_exam --run-id demo_exam || echo "  (Exam loop failed or timed out)"
+  # Local backends can be very slow (first-token latency). Use a longer timeout.
+  # Exam is resumable via traces/exam_runs/demo_exam.jsonl.
+  timeout 1800 "$PYTHON" -m kls.exam --exam demo_ml_exam --run-id demo_exam || echo "  (Exam loop failed or timed out)"
 fi
 echo ""
 
