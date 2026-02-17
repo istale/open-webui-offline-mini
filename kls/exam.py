@@ -120,9 +120,9 @@ def process_exam(exam_path: Path, run_id: str, env: dict, max_new_questions: int
     questions_dir = exam_path / "questions"
     answers_dir = exam_path / "answers"
 
-    # Checkpoint file for resumable runs
+    # Checkpoint file for resumable runs (per-question records)
     ensure_dir(TRACES_DIR / "exam_runs")
-    checkpoint_path = TRACES_DIR / "exam_runs" / f"{run_id}.jsonl"
+    checkpoint_path = TRACES_DIR / "exam_runs" / f"{run_id}.checkpoint.jsonl"
 
     if not questions_dir.exists():
         raise ValueError(f"No questions directory found: {questions_dir}")
@@ -317,7 +317,7 @@ def main():
         print(f"ERROR: {e}")
         exit(1)
     finally:
-        trace_path = TRACES_DIR / "exam_runs" / f"{run_id}.jsonl"
+        trace_path = TRACES_DIR / "exam_runs" / f"{run_id}.trace.jsonl"
         write_jsonl(trace_path, trace_records)
 
 

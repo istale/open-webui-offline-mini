@@ -53,7 +53,7 @@ else
     curl -sS -m 2 "${OPENAI_BASE_URL%/}/models" >/dev/null 2>&1 || echo "  WARN: OPENAI_BASE_URL not reachable; exam may fail"
   fi
   # Local backends can be very slow (first-token latency). Use a longer timeout.
-  # Exam is resumable via traces/exam_runs/demo_exam.jsonl.
+  # Exam is resumable via traces/exam_runs/demo_exam.checkpoint.jsonl.
   # Run in small batches (2 questions per run) to avoid watchdog SIGKILL.
   # The exam run is resumable via traces/exam_runs/demo_exam.jsonl.
   for i in 1 2 3 4 5; do
