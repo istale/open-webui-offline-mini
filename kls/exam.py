@@ -134,7 +134,8 @@ def process_exam(exam_path: Path, run_id: str, env: dict, max_new_questions: int
     answer_key_path = answers_dir / "answer_key.json"
     answer_key = read_json(answer_key_path) or {}
 
-    feedback_records = []
+    # Load existing checkpoint records so feedback can be cumulative.
+    prior_by_qid: dict[str, dict] = {}
 
     # Resume support: skip questions already processed
     done = set()
@@ -147,8 +148,11 @@ def process_exam(exam_path: Path, run_id: str, env: dict, max_new_questions: int
                 qid = rec.get("question_id")
                 if qid:
                     done.add(qid)
+                    prior_by_qid[qid] = rec
         except Exception:
             pass
+
+    feedback_records: list[dict] = []
 
     print(f"[kls.exam] questions={len(question_files)} done={len(done)}")
     results_summary = []
@@ -231,11 +235,17 @@ def process_exam(exam_path: Path, run_id: str, env: dict, max_new_questions: int
             print(f"[kls.exam] Reached max_new_questions={max_new_questions}; stopping early", flush=True)
             break
 
+    # Cumulative feedback = prior checkpoint records + newly processed records (dedup by question_id)
+    combined = dict(prior_by_qid)
+    for rec in feedback_records:
+        qid = rec.get("question_id")
+        if qid:
+            combined[qid] = rec
     feedback_output = {
         "run_id": run_id,
         "exam_set_id": exam_set_id,
         "timestamp": now_iso(),
-        "questions": feedback_records,
+        "questions": [combined[k] for k in sorted(combined.keys())],
     }
 
     feedback_dir = FEEDBACK_DIR / exam_set_id

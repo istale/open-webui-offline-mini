@@ -59,10 +59,7 @@ else
   for i in 1 2 3 4 5; do
     echo "  Exam batch $i/5 (2 questions)..."
     timeout 600 "$PYTHON" -m kls.exam --exam demo_ml_exam --run-id demo_exam --max-new 2 || echo "  (Exam batch failed or timed out)"
-    # If feedback exists, stop early.
-    if [ -f "exam_feedback/demo_ml_exam/demo_exam.json" ]; then
-      break
-    fi
+    # Continue to next batch; resumability is handled by the checkpoint file.
   done
 fi
 echo ""
