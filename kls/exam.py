@@ -181,6 +181,13 @@ def process_exam(exam_path: Path, run_id: str, env: dict, max_new_questions: int
 
         student_answer = generate_answer(question_text, env)
 
+        # Debug/verification hook: force a wrong answer for one question to validate KB update.
+        force_wrong_qid = os.environ.get("KLS_FORCE_WRONG_QID", "").strip()
+        if force_wrong_qid and force_wrong_qid == q_id:
+            # Pick a deterministic wrong option (avoid matching correct_answer).
+            student_answer = "A" if str(correct_answer).strip().upper() != "A" else "B"
+            print(f"[kls.exam] FORCED_WRONG qid={q_id} student_answer={student_answer}", flush=True)
+
         # Fast grading to reduce LLM calls: determine correctness by matching answer key.
         result = "unknown"
         if correct_answer:
