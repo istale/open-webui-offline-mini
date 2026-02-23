@@ -1,0 +1,6 @@
+What does PCA stand for?
+
+A) Principal Component Analysis
+B) Partial Classification Algorithm
+C) Predictive Clustering Approach
+D) Primary Component Aggregation

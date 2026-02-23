@@ -1,0 +1,6 @@
+What should be done with missing values in feature engineering?
+
+A) Always delete the entire row
+B) Ignore them completely
+C) Handle them appropriately
+D) Replace with random numbers

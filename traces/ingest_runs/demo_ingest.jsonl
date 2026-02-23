@@ -1,0 +1,2 @@
+{"event": "ingest_start", "run_id": "demo_ingest", "deck": "demo_ml_basics", "timestamp": "2026-02-17T01:46:52.219601+00:00"}
+{"event": "ingest_complete", "run_id": "demo_ingest", "result": {"run_id": "demo_ingest", "deck_id": "demo_ml_basics", "processed_slides": 10, "concepts_extracted": 39, "timestamp": "2026-02-17T01:46:52.223654+00:00"}, "timestamp": "2026-02-17T01:46:52.223664+00:00"}

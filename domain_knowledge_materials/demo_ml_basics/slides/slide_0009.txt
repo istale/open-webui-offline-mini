@@ -1,0 +1,6 @@
+Neural Networks Basics
+
+- Inspired by biological neurons
+- Layers: Input, Hidden, Output
+- Weights and biases
+- Activation functions: ReLU, Sigmoid, Tanh

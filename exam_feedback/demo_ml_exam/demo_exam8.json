@@ -1,0 +1,107 @@
+{
+  "run_id": "demo_exam8",
+  "exam_set_id": "demo_ml_exam",
+  "timestamp": "2026-02-16T10:49:03.728533+00:00",
+  "questions": [
+    {
+      "question_id": "q_0001",
+      "question_path": "domain_knowledge_exams/demo_ml_exam/questions/q_0001.png",
+      "student_answer": "B) Training data has labels",
+      "correct_answer": "B",
+      "result": "correct",
+      "rationale": "",
+      "gaps": [],
+      "study_actions": []
+    },
+    {
+      "question_id": "q_0002",
+      "question_path": "domain_knowledge_exams/demo_ml_exam/questions/q_0002.png",
+      "student_answer": "C) K-Means",
+      "correct_answer": "C",
+      "result": "correct",
+      "rationale": "",
+      "gaps": [],
+      "study_actions": []
+    },
+    {
+      "question_id": "q_0003",
+      "question_path": "domain_knowledge_exams/demo_ml_exam/questions/q_0003.png",
+      "student_answer": "B) Overfitting.",
+      "correct_answer": "B",
+      "result": "correct",
+      "rationale": "",
+      "gaps": [],
+      "study_actions": []
+    },
+    {
+      "question_id": "q_0004",
+      "question_path": "domain_knowledge_exams/demo_ml_exam/questions/q_0004.png",
+      "student_answer": "B) Mean Square Error.",
+      "correct_answer": "B",
+      "result": "correct",
+      "rationale": "",
+      "gaps": [],
+      "study_actions": []
+    },
+    {
+      "question_id": "q_0005",
+      "question_path": "domain_knowledge_exams/demo_ml_exam/questions/q_0005.png",
+      "student_answer": "B) ReLU",
+      "correct_answer": "B",
+      "result": "correct",
+      "rationale": "",
+      "gaps": [],
+      "study_actions": []
+    },
+    {
+      "question_id": "q_0006",
+      "question_path": "domain_knowledge_exams/demo_ml_exam/questions/q_0006.png",
+      "student_answer": "B) Reduce evaluation variance",
+      "correct_answer": "B",
+      "result": "correct",
+      "rationale": "",
+      "gaps": [],
+      "study_actions": []
+    },
+    {
+      "question_id": "q_0007",
+      "question_path": "domain_knowledge_exams/demo_ml_exam/questions/q_0007.png",
+      "student_answer": "C) Handle them appropriately",
+      "correct_answer": "C",
+      "result": "correct",
+      "rationale": "",
+      "gaps": [],
+      "study_actions": []
+    },
+    {
+      "question_id": "q_0008",
+      "question_path": "domain_knowledge_exams/demo_ml_exam/questions/q_0008.png",
+      "student_answer": "A) Principal Component Analysis",
+      "correct_answer": "A",
+      "result": "correct",
+      "rationale": "",
+      "gaps": [],
+      "study_actions": []
+    },
+    {
+      "question_id": "q_0009",
+      "question_path": "domain_knowledge_exams/demo_ml_exam/questions/q_0009.png",
+      "student_answer": "B) F1 Score",
+      "correct_answer": "B",
+      "result": "correct",
+      "rationale": "",
+      "gaps": [],
+      "study_actions": []
+    },
+    {
+      "question_id": "q_0010",
+      "question_path": "domain_knowledge_exams/demo_ml_exam/questions/q_0010.png",
+      "student_answer": "B) GPU",
+      "correct_answer": "B",
+      "result": "correct",
+      "rationale": "",
+      "gaps": [],
+      "study_actions": []
+    }
+  ]
+}

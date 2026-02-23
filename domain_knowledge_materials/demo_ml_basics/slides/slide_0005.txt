@@ -1,0 +1,6 @@
+Overfitting and Underfitting
+
+- Overfitting: Model memorizes training data
+- Underfitting: Model too simple
+- Solutions: Cross-validation, Regularization
+- Bias-Variance Tradeoff

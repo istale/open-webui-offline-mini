@@ -1,0 +1,6 @@
+Cross-Validation
+
+- K-Fold Cross Validation
+- Reduces variance in evaluation
+- Better use of limited data
+- Stratified sampling for imbalanced data

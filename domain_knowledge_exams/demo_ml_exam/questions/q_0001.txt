@@ -1,0 +1,6 @@
+What is the main characteristic of supervised learning?
+
+A) No labels in training data
+B) Training data has labels
+C) Uses only neural networks
+D) No training phase required

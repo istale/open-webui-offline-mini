@@ -1,0 +1,6 @@
+Deep Learning Overview
+
+- Deep neural networks
+- Requires large datasets
+- GPU acceleration
+- Frameworks: TensorFlow, PyTorch

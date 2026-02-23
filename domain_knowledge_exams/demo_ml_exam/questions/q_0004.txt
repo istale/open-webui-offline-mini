@@ -1,0 +1,6 @@
+What does MSE stand for in regression evaluation?
+
+A) Mean Slope Error
+B) Mean Square Error
+C) Model Selection Error
+D) Maximum Square Estimation

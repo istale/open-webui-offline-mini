@@ -1,0 +1,6 @@
+Which activation function is commonly used in hidden layers?
+
+A) Sigmoid only
+B) ReLU
+C) Step function
+D) No activation function

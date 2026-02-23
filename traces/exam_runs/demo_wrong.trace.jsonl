@@ -1,0 +1,2 @@
+{"event": "exam_start", "run_id": "demo_wrong", "exam": "demo_ml_exam", "timestamp": "2026-02-17T03:03:41.279494+00:00"}
+{"event": "exam_complete", "run_id": "demo_wrong", "result": {"run_id": "demo_wrong", "exam_set_id": "demo_ml_exam", "total_questions": 10, "correct": 3, "incorrect": 1, "unknown": 6, "feedback_path": "exam_feedback/demo_ml_exam/demo_wrong.json", "timestamp": "2026-02-17T03:08:10.085221+00:00"}, "timestamp": "2026-02-17T03:08:10.085243+00:00"}

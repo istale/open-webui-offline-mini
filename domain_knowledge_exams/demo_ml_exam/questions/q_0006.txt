@@ -1,0 +1,6 @@
+What is the purpose of cross-validation?
+
+A) Increase training time
+B) Reduce evaluation variance
+C) Add more features
+D) Remove all outliers

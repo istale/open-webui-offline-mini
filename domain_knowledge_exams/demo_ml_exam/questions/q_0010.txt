@@ -1,0 +1,6 @@
+What hardware is commonly used to accelerate deep learning?
+
+A) CPU only
+B) GPU
+C) RAM
+D) Hard drive

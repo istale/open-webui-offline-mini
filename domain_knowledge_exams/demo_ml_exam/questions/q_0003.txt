@@ -1,0 +1,6 @@
+What problem occurs when a model memorizes training data?
+
+A) Underfitting
+B) Overfitting
+C) Normal fitting
+D) Bias reduction

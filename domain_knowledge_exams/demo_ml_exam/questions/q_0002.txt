@@ -1,0 +1,6 @@
+Which algorithm is commonly used for clustering?
+
+A) Linear Regression
+B) Decision Trees
+C) K-Means
+D) Logistic Regression

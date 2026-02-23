@@ -1,0 +1,6 @@
+Training vs Testing
+
+- Split data into train/test sets
+- Train on training data
+- Evaluate on unseen test data
+- Avoid overfitting to training data

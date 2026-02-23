@@ -1,0 +1,6 @@
+Which metric combines precision and recall?
+
+A) Accuracy
+B) F1 Score
+C) ROC
+D) MSE

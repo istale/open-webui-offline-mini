@@ -1,0 +1,5 @@
+Introduction to Machine Learning
+
+- Definition: Algorithms that learn from data
+- Types: Supervised, Unsupervised, Reinforcement
+- Applications: Image recognition, NLP, Recommendation

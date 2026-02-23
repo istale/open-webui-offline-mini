@@ -1,0 +1,53 @@
+{
+  "run_id": "demo_wrong",
+  "exam_set_id": "demo_ml_exam",
+  "timestamp": "2026-02-17T03:08:10.084894+00:00",
+  "questions": [
+    {
+      "question_id": "q_0001",
+      "question_path": "domain_knowledge_exams/demo_ml_exam/questions/q_0001.png",
+      "student_answer": "B) Training data has labels",
+      "correct_answer": "B",
+      "result": "correct",
+      "rationale": "",
+      "gaps": [],
+      "study_actions": []
+    },
+    {
+      "question_id": "q_0002",
+      "question_path": "domain_knowledge_exams/demo_ml_exam/questions/q_0002.png",
+      "student_answer": "C) K-Means",
+      "correct_answer": "C",
+      "result": "correct",
+      "rationale": "",
+      "gaps": [],
+      "study_actions": []
+    },
+    {
+      "question_id": "q_0003",
+      "question_path": "domain_knowledge_exams/demo_ml_exam/questions/q_0003.png",
+      "student_answer": "A",
+      "correct_answer": "B",
+      "result": "incorrect",
+      "rationale": "The student selected A, which states 'No labels in training data' — this actually describes unsupervised learning, not supervised learning. Supervised learning fundamentally relies on labeled training data to learn mappings from inputs to outputs. Without labels, the model cannot learn the correct target functions needed for prediction tasks like classification or regression.",
+      "gaps": [
+        "confusing supervised and unsupervised learning definitions",
+        "misunderstanding the role of labels in model training"
+      ],
+      "study_actions": [
+        "Review definitions and examples of supervised vs unsupervised learning",
+        "Practice identifying label presence/absence in common ML datasets"
+      ]
+    },
+    {
+      "question_id": "q_0004",
+      "question_path": "domain_knowledge_exams/demo_ml_exam/questions/q_0004.png",
+      "student_answer": "B) Mean Square Error",
+      "correct_answer": "B",
+      "result": "correct",
+      "rationale": "",
+      "gaps": [],
+      "study_actions": []
+    }
+  ]
+}

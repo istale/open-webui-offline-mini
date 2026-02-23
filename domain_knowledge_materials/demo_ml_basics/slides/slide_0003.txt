@@ -1,0 +1,6 @@
+Unsupervised Learning
+
+- Training data has no labels
+- Goal: Find hidden patterns
+- Examples: Clustering, Dimensionality Reduction
+- Common algorithms: K-Means, PCA

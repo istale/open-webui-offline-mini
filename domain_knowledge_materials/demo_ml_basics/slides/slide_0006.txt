@@ -1,0 +1,6 @@
+Feature Engineering
+
+- Select relevant features
+- Transform raw data
+- Normalization and Scaling
+- Handle missing values

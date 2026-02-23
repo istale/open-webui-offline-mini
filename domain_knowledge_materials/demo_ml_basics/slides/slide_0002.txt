@@ -1,0 +1,6 @@
+Supervised Learning
+
+- Training data has labels
+- Goal: Learn mapping from input to output
+- Examples: Classification, Regression
+- Common algorithms: Linear Regression, Decision Trees

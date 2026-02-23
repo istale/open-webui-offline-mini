@@ -1,0 +1,6 @@
+Model Evaluation Metrics
+
+- Classification: Accuracy, Precision, Recall, F1
+- Regression: MSE, RMSE, MAE, R-squared
+- Confusion Matrix
+- ROC Curve and AUC
